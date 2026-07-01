@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
 import Image from "next/image";
 import LogoWordmark from "./LogoWordmark";
@@ -30,8 +31,11 @@ export default function HistoryBoard() {
   const layerRef = useRef<HTMLDivElement>(null);
   const cam = useRef({ x: 0, y: 0, scale: 0.75 });
   const drag = useRef<{ active: boolean; px: number; py: number } | null>(null);
-  const cfg = useRef({ M: 0.75, d: 0.2, c: 2500 });
+  const cfg = useRef({ M: 0.75, d: 0.2, c: 2500, o: 80 });
+  const raf = useRef<number | null>(null);
   const [ready, setReady] = useState(false);
+  const [introGone, setIntroGone] = useState(false);
+  const [showButton, setShowButton] = useState(false);
 
   const clamp = (x: number, y: number, scale: number) => {
     const vp = viewportRef.current;
@@ -47,6 +51,14 @@ export default function HistoryBoard() {
     };
   };
 
+  // Ce(): source center (unclamped)
+  const ce = () => {
+    const vp = viewportRef.current;
+    const { M } = cfg.current;
+    const w = vp ? vp.clientWidth : 0;
+    return { x: (w - BOARD * M) / 2, y: -(cfg.current.c * M) };
+  };
+
   const apply = () => {
     const layer = layerRef.current;
     if (!layer) return;
@@ -54,25 +66,65 @@ export default function HistoryBoard() {
     layer.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
   };
 
+  // show "Back to Center" once the camera has moved away from center
+  const refreshButton = () => {
+    const { M, o } = cfg.current;
+    const A = ce();
+    const { x, y, scale } = cam.current;
+    setShowButton(
+      Math.abs(x - A.x) > 10 || Math.abs(y - (A.y + o)) > 10 || Math.abs(scale - M) > 0.1
+    );
+  };
+
+  // instant center (used on mount + resize)
   const center = () => {
-    const vp = viewportRef.current;
-    if (!vp) return;
-    const { M, c } = cfg.current;
-    cam.current = clamp((vp.clientWidth - BOARD * M) / 2, -(c * M), M);
+    const { M, o } = cfg.current;
+    const A = ce();
+    cam.current = { x: A.x, y: A.y + o, scale: M };
     apply();
+    refreshButton();
+  };
+
+  // animated return to center — easeOutExpo over 400ms (from source)
+  const animateToCenter = () => {
+    if (raf.current) cancelAnimationFrame(raf.current);
+    const start = performance.now();
+    const from = { x: cam.current.x, y: cam.current.y };
+    const fromScale = cam.current.scale;
+    const { M, o } = cfg.current;
+    const A = ce();
+    const ease = (t: number) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t));
+    const step = (now: number) => {
+      const r = Math.min(1, (now - start) / 400);
+      const s = ease(r);
+      cam.current = {
+        x: from.x + (A.x - from.x) * s,
+        y: from.y + (A.y + o - from.y) * s,
+        scale: fromScale + (M - fromScale) * s,
+      };
+      apply();
+      if (r < 1) raf.current = requestAnimationFrame(step);
+      else refreshButton();
+    };
+    raf.current = requestAnimationFrame(step);
   };
 
   useEffect(() => {
     const mobile = window.innerWidth < 768;
     cfg.current = mobile
-      ? { M: 0.375, d: 0.3, c: 2150 }
-      : { M: 0.75, d: 0.2, c: 2500 };
+      ? { M: 0.375, d: 0.3, c: 2150, o: 90 }
+      : { M: 0.75, d: 0.2, c: 2500, o: 80 };
     cam.current.scale = cfg.current.M;
     center();
     setReady(true);
 
+    // intro cover fades out shortly after mount
+    const introT = setTimeout(() => setIntroGone(true), 50);
+
     const vp = viewportRef.current;
-    if (!vp) return;
+    if (!vp) {
+      return () => clearTimeout(introT);
+    }
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
@@ -95,12 +147,14 @@ export default function HistoryBoard() {
         );
       }
       apply();
+      refreshButton();
     };
     vp.addEventListener("wheel", onWheel, { passive: false });
 
     const onResize = () => center();
     window.addEventListener("resize", onResize);
     return () => {
+      clearTimeout(introT);
       vp.removeEventListener("wheel", onWheel);
       window.removeEventListener("resize", onResize);
     };
@@ -123,6 +177,7 @@ export default function HistoryBoard() {
       cam.current.scale
     );
     apply();
+    refreshButton();
   };
   const onPointerUp = (e: React.PointerEvent) => {
     if (drag.current) drag.current.active = false;
@@ -136,7 +191,7 @@ export default function HistoryBoard() {
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerLeave={onPointerUp}
-      className="relative w-full h-screen overflow-hidden cursor-grab active:cursor-grabbing touch-none bg-light-400"
+      className="relative w-full h-screen overflow-hidden cursor-grab active:cursor-grabbing touch-none bg-[#f5f5f4]"
     >
       <div
         ref={layerRef}
@@ -164,7 +219,6 @@ export default function HistoryBoard() {
               width: it.width,
               height: it.height,
               zIndex: it.zIndex ?? 1,
-              boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
             }}
             className="select-none pointer-events-none max-w-none"
           />
@@ -256,13 +310,28 @@ export default function HistoryBoard() {
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={center}
-        className="select-none fixed bottom-0 left-1/2 -translate-x-1/2 z-[60] bg-dark-500 text-light-500 px-3 py-1.5 rounded-[8px] font-mono text-[12px] uppercase mb-4 hover:opacity-90 transition-opacity"
-      >
-        Back to Center
-      </button>
+      {/* intro cover — starts opaque, fades out on load */}
+      <div
+        aria-hidden
+        className="fixed inset-0 bg-light-400 transition-opacity delay-500 duration-500 ease-out pointer-events-none z-50"
+        style={{ opacity: introGone ? 0 : 1 }}
+      />
+
+      <AnimatePresence>
+        {showButton && (
+          <motion.button
+            type="button"
+            onClick={animateToCenter}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3, ease: [0.05, 0.5, 0.5, 0.75] }}
+            className="select-none fixed bottom-0 left-1/2 -translate-x-1/2 z-[60] bg-dark-500 text-light-500 px-3 py-1.5 rounded-[8px] font-mono text-[12px] uppercase mb-4"
+          >
+            Back to Center
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

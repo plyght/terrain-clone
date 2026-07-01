@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { suisse, suisseMono, libreCaslon, libreCaslonCondensed } from "./fonts";
 import Nav from "./components/Nav";
+import { ThemeProvider } from "./components/ThemeProvider";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://terrain.com"),
@@ -36,10 +37,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${fontVars} h-full`}>
       <body className="min-h-full">
-        <div className={fontVars}>
-          <Nav />
-          <main className="z-[2] min-w-0 relative">{children}</main>
-        </div>
+        <ThemeProvider>
+          <div className={fontVars}>
+            <Nav />
+            <main className="z-[2] min-w-0 relative">{children}</main>
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );

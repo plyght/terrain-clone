@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTheme } from "./ThemeProvider";
 import HomeIcon from "./nav-icons/home";
 import LetterIcon from "./nav-icons/letter";
 import InvestmentsIcon from "./nav-icons/investments";
@@ -26,6 +27,7 @@ const cn = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(" ")
 
 function NavLinks({
   isHome,
+  isDark,
   activeHref,
   hovered,
   setHovered,
@@ -34,6 +36,7 @@ function NavLinks({
   onNavigate,
 }: {
   isHome: boolean;
+  isDark: boolean;
   activeHref: string | null;
   hovered: string | null;
   setHovered: (h: string | null) => void;
@@ -53,19 +56,25 @@ function NavLinks({
         // label opacity
         const v = near ? (t ? 1 : h && !p ? 1 : 0.2) : 0;
 
-        // background class (light mode; isHome picks the ramp)
+        // background class (isDark → black ramp; else isHome picks light-100/200)
         const x = h
-          ? isHome
-            ? "lg:bg-light-100 lg:hover:bg-light-100/75"
-            : "lg:bg-light-200 lg:hover:bg-light-200/75"
-          : t
-            ? isHome
-              ? "lg:bg-light-100/75"
-              : "lg:bg-light-200/75"
+          ? isDark
+            ? "lg:bg-black lg:hover:bg-black/75"
             : isHome
-              ? "lg:hover:bg-light-100/75"
-              : "lg:hover:bg-light-200/75";
-        const f = h || t ? cn("bg-light-100", x) : x;
+              ? "lg:bg-light-100 lg:hover:bg-light-100/75"
+              : "lg:bg-light-200 lg:hover:bg-light-200/75"
+          : t
+            ? isDark
+              ? "lg:bg-black/75"
+              : isHome
+                ? "lg:bg-light-100/75"
+                : "lg:bg-light-200/75"
+            : isDark
+              ? "lg:hover:bg-black/75"
+              : isHome
+                ? "lg:hover:bg-light-100/75"
+                : "lg:hover:bg-light-200/75";
+        const f = h || t ? cn(isDark ? "bg-black" : "bg-light-100", x) : x;
 
         const { Icon } = item;
         return (
@@ -88,7 +97,7 @@ function NavLinks({
               className={cn(
                 "z-10 relative size-[24px] flex items-center justify-center override-child-path-fill override-child-path-stroke",
                 "[&>svg]:h-auto",
-                "text-dark-500",
+                isDark ? "text-light-300" : "text-dark-500",
                 "max-lg:!opacity-100"
               )}
               style={{ opacity: b, transition: "opacity 150ms ease" }}
@@ -96,14 +105,19 @@ function NavLinks({
               <Icon />
             </div>
             {isMobile ? (
-              <span className="z-20 relative font-mono text-[12px] leading-none uppercase whitespace-nowrap max-lg:!opacity-100 text-dark-500">
+              <span
+                className={cn(
+                  "z-20 relative font-mono text-[12px] leading-none uppercase whitespace-nowrap max-lg:!opacity-100",
+                  isDark ? "text-light-100" : "text-dark-500"
+                )}
+              >
                 {item.label}
               </span>
             ) : (
               <div
                 className={cn(
                   "max-tablet:!opacity-100 absolute left-0 w-full h-[40px] pl-[10px] translate-x-[calc(var(--nav-width)-4px)] flex-1 z-10 text-left font-mono text-[12px] leading-none uppercase flex items-center",
-                  "text-dark-500",
+                  isDark ? "text-light-300" : "text-dark-500",
                   t ? "" : "max-ultrawide:pointer-events-none"
                 )}
                 style={{ minWidth: 160, opacity: v, transition: "opacity 150ms ease" }}
@@ -120,6 +134,7 @@ function NavLinks({
 
 export default function Nav() {
   const pathname = usePathname();
+  const { isDark } = useTheme();
   const isHome = pathname === "/";
   const activeHref =
     ITEMS.find((i) => i.href === pathname)?.href ?? null;
@@ -164,9 +179,13 @@ export default function Nav() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const menuBg = isHome
-    ? "bg-[--home-light-nav-with-opacity-75-correction]"
-    : "bg-[--global-light-nav-with-opacity-75-correction]";
+  const menuBg = isDark
+    ? isHome
+      ? "bg-[--home-dark-nav-with-opacity-75-correction]"
+      : "bg-[--global-dark-nav-with-opacity-75-correction]"
+    : isHome
+      ? "bg-[--home-light-nav-with-opacity-75-correction]"
+      : "bg-[--global-light-nav-with-opacity-75-correction]";
 
   return (
     <aside
@@ -187,9 +206,12 @@ export default function Nav() {
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
               aria-label="Open menu"
-              className="backdrop-blur-sm select-none p-1 size-[42px] inline-flex items-center justify-center text-dark-500"
+              className={cn(
+                "backdrop-blur-sm select-none p-1 size-[42px] inline-flex items-center justify-center",
+                isDark ? "text-light-300" : "text-dark-500"
+              )}
             >
-              <svg width="32" height="28" viewBox="0 0 32 28" fill="none" xmlns="http://www.w3.org/2000/svg" className="backdrop-blur-sm pointer-events-none text-dark-500">
+              <svg width="32" height="28" viewBox="0 0 32 28" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("backdrop-blur-sm pointer-events-none", isDark ? "text-light-300" : "text-dark-500")}>
                 <g style={{ transformOrigin: "center", transform: menuOpen ? "rotate(45deg)" : "none", transition: "all 300ms cubic-bezier(0.05,0.2,0.4,0.85)" }}>
                   <path d="M9 10H23" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" style={{ transform: menuOpen ? "translateY(4px)" : "none", transition: "transform 0.3s cubic-bezier(0.05,0.2,0.4,0.85)" }} />
                 </g>
@@ -215,6 +237,7 @@ export default function Nav() {
               <div className="p-1">
                 <NavLinks
                   isHome={isHome}
+                  isDark={isDark}
                   activeHref={activeHref}
                   hovered={hovered}
                   setHovered={setHovered}
@@ -234,6 +257,7 @@ export default function Nav() {
           >
             <NavLinks
               isHome={isHome}
+              isDark={isDark}
               activeHref={activeHref}
               hovered={hovered}
               setHovered={setHovered}
