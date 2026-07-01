@@ -1,26 +1,290 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   Reconstructed Terrain design system (compiled Tailwind -> real @theme).
+   Raw color ramps are RGB triples so the `rgb(var(--x) / <alpha>)` opacity
+   pattern from the original keeps working. Semantic --bg-* / --text-* aliases
+   are overridden per-section by arbitrary utilities like [--bg-500:var(--light-500)].
+--------------------------------------------------------------------------- */
+
+@theme {
+  /* fonts (next/font local variables mapped to the original family roles) */
+  --font-sans: var(--font-suisse), "Arial", sans-serif;
+  --font-mono: var(--font-suisse-mono), "Arial", monospace;
+  --font-display: var(--font-libre-caslon-condensed), "Georgia", serif;
+  --font-libre: var(--font-libre-caslon), "Georgia", serif;
+
+  /* raw color ramps (RGB triples) */
+  --color-light-500: rgb(255 255 255);
+  --color-light-400: rgb(234 232 227);
+  --color-light-300: rgb(226 224 217);
+  --color-light-200: rgb(210 209 202);
+  --color-light-100: rgb(196 194 187);
+  --color-dark-100: rgb(163 161 155);
+  --color-dark-200: rgb(128 127 123);
+  --color-dark-300: rgb(95 94 90);
+  --color-dark-400: rgb(45 44 42);
+  --color-dark-500: rgb(26 25 25);
+  --color-gold: rgb(255 215 0);
+  --color-white: rgb(255 255 255);
+  --color-black: rgb(0 0 0);
+
+  /* semantic ramps — resolve through the runtime --bg-* / --text-* aliases */
+  --color-bg-100: rgb(var(--bg-100) / 1);
+  --color-bg-200: rgb(var(--bg-200) / 1);
+  --color-bg-300: rgb(var(--bg-300) / 1);
+  --color-bg-400: rgb(var(--bg-400) / 1);
+  --color-bg-500: rgb(var(--bg-500) / 1);
+  --color-text-100: rgb(var(--text-100) / 1);
+  --color-text-200: rgb(var(--text-200) / 1);
+  --color-text-300: rgb(var(--text-300) / 1);
+  --color-text-400: rgb(var(--text-400) / 1);
+  --color-text-500: rgb(var(--text-500) / 1);
+
+  /* named spacing scale (responsive values live in :root below) */
+  --spacing-base: 72px;
+  --spacing-lg: 112px;
+  --spacing-sm: 36px;
+
+  /* container widths -> max-w-inner */
+  --container-inner: var(--inner-content-width);
+
+  /* custom breakpoint used throughout the markup (tablet:) */
+  --breakpoint-tablet: 768px;
+}
+
+/* ------------------------------- tokens ---------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --vh: 1vh;
+  --num-grid-cols: 12;
+  --px-section: 5.9vw;
+  --py-section: 80px;
+  --testing-grid-cols: 12;
+  --column-gap: 2vw;
+  --gold: 255 215 0;
+  --white: 255 255 255;
+  --light-500: 255 255 255;
+  --light-400: 234 232 227;
+  --light-300: 226 224 217;
+  --light-200: 210 209 202;
+  --light-100: 196 194 187;
+  --dark-100: 163 161 155;
+  --dark-200: 128 127 123;
+  --dark-300: 95 94 90;
+  --dark-400: 45 44 42;
+  --dark-500: 26 25 25;
+  --black: 0 0 0;
+
+  /* default semantic theme = light */
+  --bg-100: var(--light-100);
+  --bg-200: var(--light-200);
+  --bg-300: var(--light-300);
+  --bg-400: var(--light-400);
+  --bg-500: var(--light-500);
+  --text-100: var(--dark-100);
+  --text-200: var(--dark-200);
+  --text-300: var(--dark-300);
+  --text-400: var(--dark-400);
+  --text-500: var(--dark-500);
+
+  --home-light-nav-with-opacity-75-correction: hsla(48, 7%, 73%, 0.75);
+  --home-dark-nav-with-opacity-75-correction: rgba(51, 50, 47, 0.75);
+  --global-light-nav-with-opacity-75-correction: hsla(60, 8%, 77%, 0.75);
+  --global-dark-nav-with-opacity-75-correction: var(--home-dark-nav-with-opacity-75-correction);
+
+  --letter-heading: 0;
+  --letter-body: 0;
+  --letter-subheading: 0;
+  --letter-mono: 0;
+  --letter-mono-sm: 0;
+  --text-heading: 60px;
+  --line-heading: 1;
+  --text-subheading: 22px;
+  --line-subheading: 1.1818;
+  --text-body: 16px;
+  --line-body: 1.625;
+  --text-mono: 14px;
+  --line-mono: 1.571428571428571;
+  --text-mono-sm: 12px;
+  --line-mono-sm: 1.33333;
+  --tracking-mono: 0;
+  --spacing-lg: 112px;
+  --spacing-base: 72px;
+  --spacing-sm: 36px;
+  --svh: 1vh;
+  --svh: 1svh;
+  --dvh: 1vh;
+  --gutter-padding: 14px;
+  --gutter-padding-lg: 14px;
+  --nav-height: 64px;
+  --inner-content-width: 630px;
+  --outer-content-width: 1440px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@media (max-width: 767px) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --num-grid-cols: 3;
+    --px-section: 3.5vw;
+    --column-gap: 0;
+    --text-heading: 32px;
+    --line-heading: 36px;
+    --text-body: 16px;
+    --nav-height: 76px;
+    --py-section: 72px;
+    --spacing-lg: 76px;
+    --spacing-base: 36px;
+    --spacing-sm: 24px;
+  }
+}
+@media (width >= 48rem) {
+  :root {
+    --gutter-padding: 60px;
+    --navbar-height: 100px;
+  }
+}
+@media (width >= 72rem) {
+  :root {
+    --gutter-padding-lg: 80px;
   }
 }
 
+/* -------------------------------- base ----------------------------------- */
+@layer base {
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-rendering: optimizeSpeed;
+  text-rendering: optimizeSpeed;
+}
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #b3b3b3 transparent;
+  box-sizing: border-box;
+  -webkit-text-size-adjust: 100%;
+  -moz-tab-size: 4;
+  tab-size: 4;
+  font-feature-settings: normal;
+  font-variation-settings: normal;
+  -webkit-tap-highlight-color: transparent;
+}
+body,
+html {
+  overscroll-behavior-y: none;
+}
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: var(--line-body);
+  background-color: rgb(var(--light-400));
+  color: rgb(var(--dark-500));
+}
+:target {
+  scroll-margin-top: 144px;
+}
+img {
+  display: block;
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+}
+.prose,
+a {
+  word-break: break-word;
+}
+b,
+strong {
+  font-weight: 500 !important;
+}
+}
+
+/* --------------------------- typography roles ---------------------------- */
+@layer components {
+.standard-type-heading {
+  font-family: var(--font-display);
+  font-size: var(--text-heading);
+  font-weight: 500;
+  line-height: var(--line-heading);
+  letter-spacing: var(--letter-heading);
+}
+.standard-type-subheading {
+  font-family: var(--font-display);
+  font-size: var(--text-subheading);
+  font-weight: 500;
+  line-height: var(--line-subheading);
+  letter-spacing: var(--letter-subheading);
+}
+.standard-type-body {
+  font-size: var(--text-body);
+  font-weight: 400;
+  line-height: var(--line-body);
+  letter-spacing: var(--letter-body);
+}
+.standard-type-mono {
+  font-size: var(--text-mono);
+  line-height: var(--line-mono);
+  letter-spacing: var(--letter-mono);
+}
+.standard-type-mono,
+.standard-type-mono-sm {
+  font-family: var(--font-mono);
+  font-weight: 400;
+}
+.standard-type-mono-sm {
+  font-size: var(--text-mono-sm);
+  line-height: var(--line-mono-sm);
+  letter-spacing: var(--letter-mono-sm);
+}
+
+/* ----------------------------- section rhythm ---------------------------- */
+.px-section {
+  padding-left: var(--px-section);
+  padding-right: var(--px-section);
+}
+.py-section {
+  padding-top: var(--py-section);
+  padding-bottom: var(--py-section);
+}
+.pt-section {
+  padding-top: var(--py-section);
+}
+.pb-section {
+  padding-bottom: var(--py-section);
+}
+}
+
+/* ------------------------------ animations ------------------------------- */
+.wait-to-render {
+  opacity: 0;
+  animation: fade-in var(--transition-duration, 0.2s) ease-in-out forwards
+    var(--transition-delay, 0s);
+}
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes nav-fade-out {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* recolor inline SVG logos to currentColor (nav rail) */
+.override-child-path-fill :where(path, circle, rect, polygon, ellipse) {
+  fill: currentColor;
+}
+.override-child-path-stroke :where(path, line, polyline)[stroke] {
+  stroke: currentColor;
+}
+
+/* --------------------------------- misc ---------------------------------- */
+::selection {
+  background: rgb(var(--dark-500));
+  color: rgb(var(--light-400));
 }

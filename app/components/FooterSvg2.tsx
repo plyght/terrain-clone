@@ -1,0 +1,6 @@
+import type { SVGProps } from "react";
+export default function FooterSvg2(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...props} width="13" height="12" viewBox="0 0 13 12" fill="none" xmlns="http://www.w3.org/2000/svg" className="pointer-events-none w-3.5 md:w-4 text-inherit shrink-0"><path d="M13 6L0 12L3.31373 6L4.24572e-07 0L13 6Z" fill="currentColor"></path></svg>
+  );
+}

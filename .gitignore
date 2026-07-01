@@ -39,3 +39,25 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# bun
+bun-debug.log*
+
+# local env files
+.env
+.env.*
+!.env.example
+
+# local caches
+.cache/
+.turbo/
+
+# editor
+.vscode/
+.idea/
+
+# logs
+*.log
+
+# OS
+Thumbs.db
